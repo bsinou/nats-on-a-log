@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-hclog"
 	"io"
 	"log"
 	"net"
@@ -17,7 +18,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/raft"
-	"github.com/nats-io/go-nats"
+	"github.com/nats-io/nats"
 )
 
 const (
@@ -328,14 +329,17 @@ func NewNATSTransport(id string, conn *nats.Conn, timeout time.Duration, logOutp
 // with NATS as the transport layer using the provided Logger.
 func NewNATSTransportWithLogger(id string, conn *nats.Conn, timeout time.Duration, logger *log.Logger) (*raft.NetworkTransport, error) {
 	return newNATSTransport(id, conn, logger, func(stream raft.StreamLayer) *raft.NetworkTransport {
-		return raft.NewNetworkTransportWithLogger(stream, 3, timeout, logger)
+		return raft.NewNetworkTransportWithLogger(stream, 3, timeout, hclog.New(&hclog.LoggerOptions{
+			Output:os.Stdout,
+			Name:"raft",
+		}))
 	})
 }
 
 // NewNATSTransportWithConfig returns a raft.NetworkTransport implemented
 // with NATS as the transport layer, using the given config struct.
 func NewNATSTransportWithConfig(id string, conn *nats.Conn, config *raft.NetworkTransportConfig) (*raft.NetworkTransport, error) {
-	return newNATSTransport(id, conn, config.Logger, func(stream raft.StreamLayer) *raft.NetworkTransport {
+	return newNATSTransport(id, conn, log.New(os.Stdout, "", log.LstdFlags), func(stream raft.StreamLayer) *raft.NetworkTransport {
 		config.Stream = stream
 		return raft.NewNetworkTransportWithConfig(config)
 	})

@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-hclog"
 	"io"
 	"log"
 	"net"
@@ -329,10 +328,7 @@ func NewNATSTransport(id string, conn *nats.Conn, timeout time.Duration, logOutp
 // with NATS as the transport layer using the provided Logger.
 func NewNATSTransportWithLogger(id string, conn *nats.Conn, timeout time.Duration, logger *log.Logger) (*raft.NetworkTransport, error) {
 	return newNATSTransport(id, conn, logger, func(stream raft.StreamLayer) *raft.NetworkTransport {
-		return raft.NewNetworkTransportWithLogger(stream, 3, timeout, hclog.New(&hclog.LoggerOptions{
-			Output:os.Stdout,
-			Name:"raft",
-		}))
+		return raft.NewNetworkTransportWithLogger(stream, 3, timeout, logger)
 	})
 }
 
